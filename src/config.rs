@@ -5,20 +5,24 @@ use serde::Deserialize;
 use toml::{value, Value};
 
 #[derive(Deserialize)]
-struct Config {
+struct UserConfig {
     dotfiles: value::Array,
 }
 
 #[derive(Debug)]
-pub struct Data {
+pub struct Config {
+    pub dotfiles: Vec<Dotfile>,
+}
+
+#[derive(Debug)]
+pub struct Dotfile {
     pub config: String,
     pub path: String,
     pub link: bool,
 }
 
-pub fn load_config() -> Result<Vec<Data>, Error> {
-    let mut data = Vec::new();
-    let config: Config = {
+pub fn load_config() -> Result<Config, Error> {
+    let user_config: UserConfig = {
         let s = fs::read_to_string(
             config_dir()
                 .unwrap()
@@ -30,7 +34,8 @@ pub fn load_config() -> Result<Vec<Data>, Error> {
         toml::from_str(&s).unwrap()
     };
 
-    for dotfile in config.dotfiles {
+    let mut dotfiles = Vec::new();
+    for dotfile in user_config.dotfiles {
         let config = get_item("config", &dotfile, &Value::from(""))
             .to_string()
             .trim_matches('"')
@@ -43,10 +48,10 @@ pub fn load_config() -> Result<Vec<Data>, Error> {
             .as_bool()
             .unwrap();
 
-        data.push(Data { config, path, link })
+        dotfiles.push(Dotfile { config, path, link })
     }
 
-    Ok(data)
+    Ok(Config { dotfiles })
 }
 
 fn get_item<'a>(item_name: &'a str, dotfile: &'a Value, default: &'a Value) -> &'a Value {
