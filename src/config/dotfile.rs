@@ -2,7 +2,12 @@
 use std::os::unix;
 #[cfg(target_os = "windows")]
 use std::os::windows;
-use std::{fs, io::Error, path::PathBuf, process::Command};
+use std::{
+    fs,
+    io::Error,
+    path::PathBuf,
+    process::{Command, Stdio},
+};
 
 use fs_extra::{self, dir::CopyOptions};
 
@@ -57,7 +62,8 @@ impl Dotfile {
                                 self.target.to_str().unwrap(),
                                 self.path.to_str().unwrap(),
                             ])
-                            .output();
+                            .stdout(Stdio::null())
+                            .spawn();
                     }
                 }
                 SyncType::Copy => {
