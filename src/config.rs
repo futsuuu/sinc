@@ -1,4 +1,4 @@
-use std::{env, fs, io::Error};
+use std::{fs, io::Error};
 
 use dirs::{config_dir, home_dir};
 use serde::Deserialize;
@@ -8,15 +8,20 @@ mod dotfile;
 
 #[derive(Debug)]
 pub struct Config {
-    pub dir: String,
     pub dotfiles: Vec<dotfile::Dotfile>,
 }
 
 pub fn load_config() -> Result<Config, Error> {
     #[derive(Deserialize)]
     struct UserConfig {
-        dir: String,
+        default: DefaultVal,
         dotfiles: value::Array,
+    }
+
+    #[derive(Deserialize)]
+    struct DefaultVal {
+        dir: Value,
+        sync_type: Value,
     }
 
     let user_config: UserConfig = {
@@ -31,50 +36,53 @@ pub fn load_config() -> Result<Config, Error> {
         toml::from_str(&s).unwrap()
     };
 
-    let dir = expand_home(user_config.dir);
-
     let mut dotfiles = Vec::new();
     for df in user_config.dotfiles {
-        let path = get_item("path", &df, &Value::from(""))
+        let dir = {
+            match df.get("dir") {
+                Some(t) => t,
+                None => &user_config.default.dir,
+            }
             .to_string()
             .trim_matches('"')
-            .to_string();
-        let target = get_item("target", &df, &Value::from(""))
             .to_string()
-            .trim_matches('"')
-            .to_string();
-        let sync_type = match get_item("type", &df, &Value::from("symlink")).as_str() {
-            Some("symlink") => dotfile::SyncType::SymLink,
-            Some("hardlink") => dotfile::SyncType::HardLink,
-            Some("junction") => dotfile::SyncType::Junction,
-            Some("copy") => dotfile::SyncType::Copy,
-            _ => dotfile::SyncType::SymLink,
         };
+        let sync_type = {
+            match df.get("sync_type") {
+                Some(t) => t,
+                None => &user_config.default.sync_type,
+            }
+            .as_str()
+        };
+        let path = df
+            .get("path")
+            .unwrap()
+            .to_string()
+            .trim_matches('"')
+            .to_string();
+        let target = df
+            .get("target")
+            .unwrap()
+            .to_string()
+            .trim_matches('"')
+            .to_string();
 
         dotfiles.push(dotfile::Dotfile::new(
-            format!("{}/{}", &dir, path).replace("/", "\\"),
-            expand_home(target),
+            correct_path(format!("{}/{}", dir, path)),
+            correct_path(target),
             sync_type,
         ));
     }
 
-    Ok(Config { dir, dotfiles })
+    Ok(Config { dotfiles })
 }
 
-fn get_item<'a>(item_name: &'a str, val: &'a Value, default: &'a Value) -> &'a Value {
-    match val.get(item_name) {
-        Some(item) => match item {
-            Value::Table(t) => match t.get(env::consts::OS) {
-                Some(val) => val,
-                None => t.get("default").unwrap(),
-            },
-            _ => item,
-        },
-        None => default,
-    }
-}
-
-fn expand_home(path: String) -> String {
+fn correct_path(path: String) -> String {
+    let separator = if cfg!(target_os = "windows") {
+        "\\"
+    } else {
+        "/"
+    };
     if path.starts_with('~') {
         let mut p = home_dir().unwrap();
         let home: &[_] = &['~', '/', '\\'];
@@ -83,4 +91,5 @@ fn expand_home(path: String) -> String {
     } else {
         path
     }
+    .replace("/", separator)
 }

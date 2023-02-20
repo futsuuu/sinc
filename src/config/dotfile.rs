@@ -27,11 +27,17 @@ pub enum SyncType {
 }
 
 impl Dotfile {
-    pub fn new(path: String, target: String, sync_type: SyncType) -> Self {
+    pub fn new(path: String, target: String, sync_type: Option<&str>) -> Self {
         Self {
             path: PathBuf::from(path),
             target: PathBuf::from(target),
-            sync_type,
+            sync_type: match sync_type {
+                Some("symlink") => SyncType::SymLink,
+                Some("hardlink") => SyncType::HardLink,
+                Some("junction") => SyncType::Junction,
+                Some("copy") => SyncType::Copy,
+                _ => SyncType::Copy,
+            },
         }
     }
 
@@ -40,6 +46,10 @@ impl Dotfile {
             if self.path.exists() {
                 fs_extra::remove_items(&[&self.target]).unwrap();
             } else {
+                let parent_dir = self.path.parent().unwrap();
+                if !parent_dir.exists() {
+                    fs::create_dir_all(parent_dir)?;
+                }
                 fs::rename(&self.target, &self.path)?;
             }
         }
