@@ -78,10 +78,11 @@ pub fn load_config() -> Result<Config, Error> {
 }
 
 fn correct_path(path: String) -> String {
-    let separator = if cfg!(target_os = "windows") {
-        "\\"
+    struct Separator<'a>(&'a str, &'a str);
+    let sep = if cfg!(target_os = "windows") {
+        Separator("/", "\\")
     } else {
-        "/"
+        Separator("\\", "/")
     };
     if path.starts_with('~') {
         let mut p = home_dir().unwrap();
@@ -91,5 +92,5 @@ fn correct_path(path: String) -> String {
     } else {
         path
     }
-    .replace("/", separator)
+    .replace(sep.0, sep.1)
 }
