@@ -80,7 +80,7 @@ fn correct_path(path: String) -> String {
     if path.starts_with('~') {
         let mut p = home_dir().unwrap();
         let home: &[_] = &['~', '/', '\\'];
-        p.push(path.trim_start_matches(home).to_string());
+        p.push(path.trim_start_matches(home));
         p.display().to_string()
     } else {
         path
