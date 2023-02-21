@@ -51,6 +51,8 @@ pub fn load_config(config_path: String) -> Result<Config, Error> {
                 None => &user_config.default.sync_type,
             }
             .to_string()
+            .trim_matches('"')
+            .to_string()
         };
         let path = df
             .get("path")

@@ -55,14 +55,18 @@ impl Dotfile {
         }
 
         if self.path.exists() {
+            print!("{} ──(", self.path.display());
             match self.sync_type {
                 SyncType::SymLink => {
+                    print!("symlink");
                     self.create_symlink()?;
                 }
                 SyncType::HardLink => {
+                    print!("hardlink");
                     fs::hard_link(&self.path, &self.target)?;
                 }
                 SyncType::Junction => {
+                    print!("junction");
                     if cfg!(target_os = "windows") {
                         let _ = Command::new("cmd")
                             .arg("/C")
@@ -77,6 +81,7 @@ impl Dotfile {
                     }
                 }
                 SyncType::Copy => {
+                    print!("copy");
                     fs_extra::copy_items(
                         &[&self.path],
                         &self.target,
@@ -85,6 +90,7 @@ impl Dotfile {
                     .unwrap();
                 }
             }
+            println!(")→  {}", self.target.display());
         }
 
         Ok(())
