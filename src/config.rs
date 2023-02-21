@@ -36,44 +36,28 @@ pub fn load_config(config_path: String) -> Result<Config, Error> {
 
     let mut dotfiles = Vec::new();
     for df in user_config.dotfiles {
-        let dir = {
-            match df.get("dir") {
-                Some(t) => t,
-                None => &user_config.default.dir,
-            }
-            .to_string()
-            .trim_matches('"')
-            .to_string()
+        let dir = match df.get("dir") {
+            Some(t) => t,
+            None => &user_config.default.dir,
         };
-        let sync_type = {
-            match df.get("sync_type") {
-                Some(t) => t,
-                None => &user_config.default.sync_type,
-            }
-            .to_string()
-            .trim_matches('"')
-            .to_string()
+        let sync_type = match df.get("sync_type") {
+            Some(t) => t,
+            None => &user_config.default.sync_type,
         };
-        let path = df
-            .get("path")
-            .unwrap()
-            .to_string()
-            .trim_matches('"')
-            .to_string();
-        let target = df
-            .get("target")
-            .unwrap()
-            .to_string()
-            .trim_matches('"')
-            .to_string();
+        let path = df.get("path").unwrap();
+        let target = df.get("target").unwrap();
 
         dotfiles.push(Dotfile {
-            dir,
-            path,
-            target,
-            sync_type,
+            dir: val2string(dir),
+            path: val2string(path),
+            target: val2string(target),
+            sync_type: val2string(sync_type),
         });
     }
 
     Ok(Config { dotfiles })
+}
+
+fn val2string(s: &Value) -> String {
+    s.to_string().trim_matches('"').to_string()
 }
