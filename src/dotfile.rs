@@ -27,15 +27,15 @@ pub enum SyncType {
 }
 
 impl Dotfile {
-    pub fn new(path: String, target: String, sync_type: Option<&str>) -> Self {
+    pub fn new(path: String, target: String, sync_type: String) -> Self {
         Self {
             path: PathBuf::from(path),
             target: PathBuf::from(target),
-            sync_type: match sync_type {
-                Some("symlink") => SyncType::SymLink,
-                Some("hardlink") => SyncType::HardLink,
-                Some("junction") => SyncType::Junction,
-                Some("copy") => SyncType::Copy,
+            sync_type: match sync_type.as_str() {
+                "symlink" => SyncType::SymLink,
+                "hardlink" => SyncType::HardLink,
+                "junction" => SyncType::Junction,
+                "copy" => SyncType::Copy,
                 _ => SyncType::Copy,
             },
         }

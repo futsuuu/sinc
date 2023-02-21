@@ -1,14 +1,19 @@
 use std::{fs, io::Error, path::PathBuf};
 
-use dirs::home_dir;
 use serde::Deserialize;
 use toml::{value, Value};
 
-mod dotfile;
-
 #[derive(Debug)]
 pub struct Config {
-    pub dotfiles: Vec<dotfile::Dotfile>,
+    pub dotfiles: Vec<Dotfile>,
+}
+
+#[derive(Debug)]
+pub struct Dotfile {
+    pub dir: String,
+    pub path: String,
+    pub target: String,
+    pub sync_type: String,
 }
 
 pub fn load_config(config_path: String) -> Result<Config, Error> {
@@ -25,7 +30,7 @@ pub fn load_config(config_path: String) -> Result<Config, Error> {
     }
 
     let user_config: UserConfig = {
-        let s = fs::read_to_string(PathBuf::from(correct_path(config_path)))?;
+        let s = fs::read_to_string(PathBuf::from(config_path))?;
         toml::from_str(&s).unwrap()
     };
 
@@ -45,7 +50,7 @@ pub fn load_config(config_path: String) -> Result<Config, Error> {
                 Some(t) => t,
                 None => &user_config.default.sync_type,
             }
-            .as_str()
+            .to_string()
         };
         let path = df
             .get("path")
@@ -60,30 +65,13 @@ pub fn load_config(config_path: String) -> Result<Config, Error> {
             .trim_matches('"')
             .to_string();
 
-        dotfiles.push(dotfile::Dotfile::new(
-            correct_path(format!("{}/{}", dir, path)),
-            correct_path(target),
+        dotfiles.push(Dotfile {
+            dir,
+            path,
+            target,
             sync_type,
-        ));
+        });
     }
 
     Ok(Config { dotfiles })
-}
-
-fn correct_path(path: String) -> String {
-    struct Separator<'a>(&'a str, &'a str);
-    let sep = if cfg!(target_os = "windows") {
-        Separator("/", "\\")
-    } else {
-        Separator("\\", "/")
-    };
-    if path.starts_with('~') {
-        let mut p = home_dir().unwrap();
-        let home: &[_] = &['~', '/', '\\'];
-        p.push(path.trim_start_matches(home));
-        p.display().to_string()
-    } else {
-        path
-    }
-    .replace(sep.0, sep.1)
 }
