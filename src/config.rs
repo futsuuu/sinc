@@ -1,6 +1,6 @@
-use std::{fs, io::Error};
+use std::{fs, io::Error, path::PathBuf};
 
-use dirs::{config_dir, home_dir};
+use dirs::home_dir;
 use serde::Deserialize;
 use toml::{value, Value};
 
@@ -11,7 +11,7 @@ pub struct Config {
     pub dotfiles: Vec<dotfile::Dotfile>,
 }
 
-pub fn load_config() -> Result<Config, Error> {
+pub fn load_config(config_path: String) -> Result<Config, Error> {
     #[derive(Deserialize)]
     struct UserConfig {
         default: DefaultVal,
@@ -25,14 +25,7 @@ pub fn load_config() -> Result<Config, Error> {
     }
 
     let user_config: UserConfig = {
-        let s = fs::read_to_string(
-            config_dir()
-                .unwrap()
-                .join("sing/config.toml")
-                .to_str()
-                .unwrap(),
-        )?;
-
+        let s = fs::read_to_string(PathBuf::from(correct_path(config_path)))?;
         toml::from_str(&s).unwrap()
     };
 
