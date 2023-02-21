@@ -15,15 +15,7 @@ use fs_extra::{self, dir::CopyOptions};
 pub struct Dotfile {
     path: PathBuf,
     target: PathBuf,
-    sync_type: SyncType,
-}
-
-#[derive(Debug)]
-pub enum SyncType {
-    SymLink,
-    HardLink,
-    Junction,
-    Copy,
+    sync_type: String,
 }
 
 impl Dotfile {
@@ -31,13 +23,7 @@ impl Dotfile {
         Self {
             path: PathBuf::from(path),
             target: PathBuf::from(target),
-            sync_type: match sync_type.as_str() {
-                "symlink" => SyncType::SymLink,
-                "hardlink" => SyncType::HardLink,
-                "junction" => SyncType::Junction,
-                "copy" => SyncType::Copy,
-                _ => SyncType::Copy,
-            },
+            sync_type,
         }
     }
 
@@ -55,18 +41,20 @@ impl Dotfile {
         }
 
         if self.path.exists() {
-            print!("{} ──(", self.path.display());
-            match self.sync_type {
-                SyncType::SymLink => {
-                    print!("symlink");
+            println!(
+                "{} ===( {} )==> {}",
+                self.path.display(),
+                self.sync_type,
+                self.target.display()
+            );
+            match self.sync_type.as_str() {
+                "symlink" => {
                     self.create_symlink()?;
                 }
-                SyncType::HardLink => {
-                    print!("hardlink");
+                "hardlink" => {
                     fs::hard_link(&self.path, &self.target)?;
                 }
-                SyncType::Junction => {
-                    print!("junction");
+                "junction" => {
                     if cfg!(target_os = "windows") {
                         let _ = Command::new("cmd")
                             .arg("/C")
@@ -80,8 +68,7 @@ impl Dotfile {
                             .spawn();
                     }
                 }
-                SyncType::Copy => {
-                    print!("copy");
+                "copy" => {
                     fs_extra::copy_items(
                         &[&self.path],
                         &self.target,
@@ -89,8 +76,8 @@ impl Dotfile {
                     )
                     .unwrap();
                 }
+                _ => (),
             }
-            println!(")→  {}", self.target.display());
         }
 
         Ok(())
