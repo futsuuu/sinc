@@ -1,10 +1,10 @@
 [package]
-name = "singer"
+name = "sinc"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
 authors = ["futsuuu <futsuuu123@gmail.com>"]
-repository = "https://github.com/futsuuu/singer"
+repository = "https://github.com/futsuuu/sinc"
 readme = "README.md"
 description = "A cross-platform dotfiles manager written in Rust."
 keywords = ["dotfiles", "manager", "toml", "config", "setting"]

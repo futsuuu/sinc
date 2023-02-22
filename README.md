@@ -1,3 +1,3 @@
-# singer
+# sinc
 
 WIP
