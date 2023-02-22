@@ -47,39 +47,44 @@ impl Dotfile {
                 self.sync_type,
                 self.target.display()
             );
-            match self.sync_type.as_str() {
-                "symlink" => {
-                    self.create_symlink()?;
-                }
-                "hardlink" => {
-                    fs::hard_link(&self.path, &self.target)?;
-                }
-                "junction" => {
-                    if cfg!(target_os = "windows") {
-                        let _ = Command::new("cmd")
-                            .arg("/C")
-                            .args([
-                                "mklink",
-                                "/J",
-                                self.target.to_str().unwrap(),
-                                self.path.to_str().unwrap(),
-                            ])
-                            .stdout(Stdio::null())
-                            .spawn();
-                    }
-                }
-                "copy" => {
-                    fs_extra::copy_items(
-                        &[&self.path],
-                        &self.target,
-                        &CopyOptions::new().copy_inside(true),
-                    )
-                    .unwrap();
-                }
-                _ => (),
-            }
+            self.new_item()?;
         }
 
+        Ok(())
+    }
+
+    fn new_item(&self) -> Result<(), Error> {
+        match self.sync_type.as_str() {
+            "symlink" => {
+                self.create_symlink()?;
+            }
+            "hardlink" => {
+                fs::hard_link(&self.path, &self.target)?;
+            }
+            "junction" => {
+                if cfg!(target_os = "windows") {
+                    let _ = Command::new("cmd")
+                        .arg("/C")
+                        .args([
+                            "mklink",
+                            "/J",
+                            self.target.to_str().unwrap(),
+                            self.path.to_str().unwrap(),
+                        ])
+                        .stdout(Stdio::null())
+                        .spawn();
+                }
+            }
+            "copy" => {
+                fs_extra::copy_items(
+                    &[&self.path],
+                    &self.target,
+                    &CopyOptions::new().copy_inside(true),
+                )
+                .unwrap();
+            }
+            _ => (),
+        }
         Ok(())
     }
 
