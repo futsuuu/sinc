@@ -30,23 +30,26 @@ impl Dotfile {
     pub fn sync(&self) -> Result<(), Error> {
         if self.target.exists() {
             if self.path.exists() {
-                fs_extra::remove_items(&[&self.target]).unwrap();
+                // o -> o
+                let target = &self.target;
+                let new_target = PathBuf::from(self.target.display().to_string() + ".old_version");
+
+                fs::rename(&self.target, &new_target)?;
+                match self.new_item() {
+                    Ok(_) => fs_extra::remove_items(&[&new_target]).unwrap(),
+                    Err(_) => fs::rename(new_target, target)?,
+                }
             } else {
+                // x -> o
                 let parent_dir = self.path.parent().unwrap();
                 if !parent_dir.exists() {
                     fs::create_dir_all(parent_dir)?;
                 }
                 fs::rename(&self.target, &self.path)?;
+                self.new_item()?;
             }
-        }
-
-        if self.path.exists() {
-            println!(
-                "{} ===( {} )==> {}",
-                self.path.display(),
-                self.sync_type,
-                self.target.display()
-            );
+        } else if self.path.exists() {
+            // o -> x
             self.new_item()?;
         }
 
@@ -54,6 +57,12 @@ impl Dotfile {
     }
 
     fn new_item(&self) -> Result<(), Error> {
+        println!(
+            "{} ===( {} )==> {}",
+            self.path.display(),
+            self.sync_type,
+            self.target.display()
+        );
         match self.sync_type.as_str() {
             "symlink" => {
                 self.create_symlink()?;
