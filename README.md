@@ -1,3 +1,3 @@
-# sing
+# singer
 
 WIP
