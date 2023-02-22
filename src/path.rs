@@ -3,12 +3,12 @@ use std::env;
 use dirs::home_dir;
 
 pub fn config_file() -> String {
-    format!("{}/sing.toml", get_dir("XDG_CONFIG_HOME", "~/.config"))
+    format!("{}/singer.toml", get_dir("XDG_CONFIG_HOME", "~/.config"))
 }
 
 fn get_dir(env_var: &str, fallback: &str) -> String {
     to_correct(format!(
-        "{}/sing",
+        "{}/singer",
         match env::var(env_var) {
             Ok(p) => p,
             Err(_) => fallback.to_string(),
