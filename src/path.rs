@@ -3,17 +3,14 @@ use std::env;
 use dirs::home_dir;
 
 pub fn config_file() -> String {
-    format!("{}/sinc.toml", get_dir("XDG_CONFIG_HOME", "~/.config"))
-}
-
-fn get_dir(env_var: &str, fallback: &str) -> String {
-    to_correct(format!(
-        "{}/sinc",
-        match env::var(env_var) {
+    let config_dir = match env::var("SINC_CONFIG_DIR") {
+        Ok(p) => p,
+        Err(_) => match env::var("XDG_CONFIG_HOME") {
             Ok(p) => p,
-            Err(_) => fallback.to_string(),
-        }
-    ))
+            Err(_) => "~/.config".to_string(),
+        },
+    };
+    to_correct(format!("{}/sinc/sinc.toml", config_dir))
 }
 
 pub fn to_correct(path: String) -> String {
