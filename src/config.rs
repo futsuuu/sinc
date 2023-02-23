@@ -1,5 +1,6 @@
 use std::{env::consts, fs, io::Error, path::PathBuf};
 
+use os_info;
 use serde::Deserialize;
 use toml::{value, Value};
 
@@ -79,11 +80,15 @@ fn get_val(parent_value: &Value, value_name: &str, default_value: Option<&Value>
     match raw_value {
         Value::Table(t) => {
             let mut t_iter = t.iter();
-            let child = t_iter.next().unwrap();
-            let item_name = child.0.as_str();
-            let item_val = child.1;
-            match item_name {
-                "match(os)" => new_arm(item_val, consts::OS),
+            let (item_name, item_val) = t_iter.next().unwrap();
+            match item_name.as_str() {
+                "match(os)" => new_arm(
+                    item_val,
+                    format!("{}", os_info::get().os_type())
+                        .to_lowercase()
+                        .as_str(),
+                ),
+                "match(os_type)" => new_arm(item_val, consts::OS),
                 "match(os_family)" => new_arm(item_val, consts::FAMILY),
                 _ => item_val.clone(),
             }
