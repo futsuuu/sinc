@@ -15,6 +15,7 @@ pub struct Dotfile {
     pub path: String,
     pub target: String,
     pub sync_type: String,
+    pub enable: bool,
 }
 
 pub fn load_config(config_path: String) -> Result<Config, Error> {
@@ -41,11 +42,13 @@ pub fn load_config(config_path: String) -> Result<Config, Error> {
         let sync_type = get_val(&df, "sync_type", Some(&user_config.default.sync_type));
         let path = get_val(&df, "path", None);
         let target = get_val(&df, "target", None);
+        let enable = get_val(&df, "enable", Some(&Value::Boolean(true)));
         dotfiles.push(Dotfile {
             dir: val2string(dir),
             path: val2string(path),
             target: val2string(target),
             sync_type: val2string(sync_type),
+            enable: enable.as_bool().unwrap(),
         });
     }
 
