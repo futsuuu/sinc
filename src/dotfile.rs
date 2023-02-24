@@ -1,4 +1,4 @@
-#[cfg(target_os = "unix")]
+#[cfg(not(target_os = "windows"))]
 use std::os::unix;
 #[cfg(target_os = "windows")]
 use std::os::windows;
@@ -97,7 +97,7 @@ impl Dotfile {
         Ok(())
     }
 
-    #[cfg(target_os = "unix")]
+    #[cfg(not(target_os = "windows"))]
     fn create_symlink(&self) -> Result<(), Error> {
         unix::fs::symlink(&self.path, &self.target)
     }
