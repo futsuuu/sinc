@@ -26,7 +26,7 @@ $ cargo install sinc
 
 Sing looks for the config file in the following location:
 
-- `$SINC_DIR/sinc/sinc.toml`
+- `$SINC_CONFIG_DIR/sinc/sinc.toml`
 - `$XDG_CONFIG_HOME/sinc/sinc.toml`
 - `$HOME/.config/sinc/sinc.toml`
 
