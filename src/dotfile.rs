@@ -56,13 +56,16 @@ impl Dotfile {
         Ok(())
     }
 
-    fn new_item(&self) -> Result<(), Error> {
-        println!(
+    pub fn get_message(&self) -> String {
+        format!(
             "{} ===( {} )==> {}",
             self.path.display(),
             self.sync_type,
             self.target.display()
-        );
+        )
+    }
+
+    fn new_item(&self) -> Result<(), Error> {
         match self.sync_type.as_str() {
             "symlink" => {
                 self.create_symlink()?;
