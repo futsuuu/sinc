@@ -16,18 +16,30 @@ pub struct Dotfile {
     path: PathBuf,
     target: PathBuf,
     sync_type: String,
+    enable: bool,
 }
 
 impl Dotfile {
-    pub fn new(path: String, target: String, sync_type: String) -> Self {
+    pub fn new(path: String, target: String, sync_type: String, enable: bool) -> Self {
+        let path = PathBuf::from(path);
+        let target = PathBuf::from(target);
+        let enable = enable & path.exists() & target.exists();
         Self {
-            path: PathBuf::from(path),
-            target: PathBuf::from(target),
+            path,
+            target,
             sync_type,
+            enable,
         }
     }
 
     pub fn sync(&self) -> Result<(), Error> {
+        if self.enable {
+            self._sync()?;
+        }
+        Ok(())
+    }
+
+    fn _sync(&self) -> Result<(), Error> {
         if self.target.exists() {
             if self.path.exists() {
                 // o -> o
@@ -57,12 +69,16 @@ impl Dotfile {
     }
 
     pub fn get_message(&self) -> String {
-        format!(
-            "{} ===( {} )==> {}",
-            self.path.display(),
-            self.sync_type,
-            self.target.display()
-        )
+        if self.enable {
+            format!(
+                "{} ===( {} )==> {}",
+                self.path.display(),
+                self.sync_type,
+                self.target.display()
+            )
+        } else {
+            format!("disable: {}", self.path.display())
+        }
     }
 
     fn new_item(&self) -> Result<(), Error> {

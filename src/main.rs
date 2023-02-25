@@ -12,13 +12,12 @@ fn main() -> Result<(), Error> {
     let mut dotfiles = Vec::new();
 
     for df in config_data.dotfiles {
-        if df.enable {
-            dotfiles.push(dotfile::Dotfile::new(
-                path::to_correct(format!("{}/{}", df.dir, df.path)),
-                path::to_correct(df.target),
-                df.sync_type,
-            ));
-        }
+        dotfiles.push(dotfile::Dotfile::new(
+            path::to_correct(format!("{}/{}", df.dir, df.path)),
+            path::to_correct(df.target),
+            df.sync_type,
+            df.enable,
+        ));
     }
 
     let mut progress = ui::Progress::new(*&dotfiles.len() as u16);
