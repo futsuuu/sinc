@@ -20,17 +20,10 @@ fn main() -> Result<(), Error> {
         ));
     }
 
-    let mut progress = ui::Progress::new(*&dotfiles.len() as u16);
-
     for df in dotfiles {
-        progress.message = df.get_message();
-        progress.draw()?;
+        println!("{}", df.get_message());
         df.sync()?;
-        progress.val += 1;
     }
-
-    progress.message = format!("success");
-    progress.end()?;
 
     Ok(())
 }
