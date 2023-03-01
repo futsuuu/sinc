@@ -5,6 +5,8 @@ use crossterm::{
     terminal,
 };
 
+use crate::path::omit_home;
+
 pub fn symbol(symbol: &str) {
     print!("{}", symbol.cyan())
 }
@@ -21,7 +23,7 @@ pub fn path(path: &PathBuf) {
     print!(
         "{}{}{}",
         backquote,
-        path.display().to_string().green(),
+        omit_home(path.display().to_string()).green(),
         backquote
     )
 }

@@ -30,3 +30,7 @@ pub fn to_correct(path: String) -> String {
     }
     .replace(sep.0, sep.1)
 }
+
+pub fn omit_home(path: String) -> String {
+    path.replacen(home_dir().unwrap().to_str().unwrap(), "~", 1)
+}
