@@ -11,9 +11,18 @@ keywords = ["dotfiles", "manager", "toml", "config", "setting"]
 categories = ["config", "command-line-utilities"]
 
 [dependencies]
+anyhow = "1.0"
 crossterm = "0.26.0"
 dirs = "4.0.0"
 fs_extra = "1.3.0"
 os_info = "3"
 serde = { version = "1.0", features = ["derive"] }
+thiserror = "1.0"
 toml = { version = "0.7.1", features = ["preserve_order"] }
+
+[target."cfg(windows)".dependencies.windows-sys]
+version = "0.45.0"
+features = [
+  "Win32_UI_Shell",
+  "Win32_Foundation",
+]
