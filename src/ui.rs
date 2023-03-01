@@ -1,6 +1,30 @@
-use std::fmt::Display;
+use std::{fmt::Display, path::PathBuf};
 
-use crossterm::{style::Stylize, terminal};
+use crossterm::{
+    style::{style, Stylize},
+    terminal,
+};
+
+pub fn symbol(symbol: &str) {
+    print!("{}", symbol.cyan())
+}
+
+pub fn item_type<D>(item_type: D)
+where
+    D: Display,
+{
+    print!("{}", style(item_type).magenta().bold())
+}
+
+pub fn path(path: &PathBuf) {
+    let backquote = "`".green().dim();
+    print!(
+        "{}{}{}",
+        backquote,
+        path.display().to_string().green(),
+        backquote
+    )
+}
 
 pub fn title<D>(title: D)
 where

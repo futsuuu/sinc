@@ -79,17 +79,18 @@ impl Dotfile {
         Ok(())
     }
 
-    pub fn get_message(&self) -> String {
+    pub fn print_message(&self) {
         if self.enable {
-            format!(
-                "{} ===( {} )==> {}",
-                self.path.display(),
-                self.sync_type,
-                self.target.display()
-            )
+            ui::path(&self.path);
+            ui::symbol(" ====( ");
+            ui::item_type(self.sync_type.clone());
+            ui::symbol(" )===> ");
+            ui::path(&self.target);
         } else {
-            format!("disable: {}", self.path.display())
+            print!("disable: ");
+            ui::path(&self.path);
         }
+        println!();
     }
 
     fn new_item(&self) -> Result<(), Error> {
