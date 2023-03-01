@@ -13,6 +13,7 @@ use fs_extra::{self, dir::CopyOptions};
 
 #[derive(Debug)]
 pub struct Dotfile {
+    name: String,
     path: PathBuf,
     target: PathBuf,
     sync_type: String,
@@ -20,11 +21,18 @@ pub struct Dotfile {
 }
 
 impl Dotfile {
-    pub fn new(path: String, target: String, sync_type: String, enable: bool) -> Self {
+    pub fn new(
+        name: String,
+        path: String,
+        target: String,
+        sync_type: String,
+        enable: bool,
+    ) -> Self {
         let path = PathBuf::from(path);
         let target = PathBuf::from(target);
         let enable = enable & path.exists() & target.exists();
         Self {
+            name,
             path,
             target,
             sync_type,

@@ -13,6 +13,7 @@ fn main() -> Result<(), Error> {
 
     for df in config_data.dotfiles {
         dotfiles.push(dotfile::Dotfile::new(
+            df.path.clone(),
             path::to_correct(format!("{}/{}", df.dir, df.path)),
             path::to_correct(df.target),
             df.sync_type,
