@@ -11,6 +11,8 @@ use std::{
 
 use fs_extra::{self, dir::CopyOptions};
 
+use crate::ui;
+
 #[derive(Debug)]
 pub struct Dotfile {
     name: String,
@@ -41,6 +43,7 @@ impl Dotfile {
     }
 
     pub fn sync(&self) -> Result<(), Error> {
+        ui::title(self.name.clone());
         if self.enable {
             self._sync()?;
         }

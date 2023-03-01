@@ -22,9 +22,11 @@ fn main() -> Result<(), Error> {
     }
 
     for df in dotfiles {
-        println!("{}", df.get_message());
         df.sync()?;
+        println!("{}", df.get_message());
     }
+
+    println!();
 
     Ok(())
 }
