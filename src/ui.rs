@@ -1,4 +1,4 @@
-use std::{fmt::Display, path::PathBuf};
+use std::{fmt::Display, path::Path};
 
 use crossterm::{
     style::{style, Stylize},
@@ -18,7 +18,7 @@ where
     print!("{}", style(item_type).magenta().bold())
 }
 
-pub fn path(path: &PathBuf) {
+pub fn path(path: &Path) {
     let backquote = "`".green().dim();
     print!(
         "{}{}{}",

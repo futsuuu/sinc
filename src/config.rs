@@ -1,6 +1,5 @@
 use std::{env::consts, fs, io::Error, path::PathBuf};
 
-use os_info;
 use serde::Deserialize;
 use toml::{value, Value};
 
