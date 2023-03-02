@@ -4,14 +4,32 @@ use std::os::unix;
 use std::os::windows;
 use std::{
     fs,
-    io::Error,
     path::PathBuf,
     process::{Command, Stdio},
 };
 
 use fs_extra::{self, dir::CopyOptions};
+use thiserror::Error;
+#[cfg(target_os = "windows")]
+use windows_sys::Win32::UI::Shell::IsUserAnAdmin;
 
 use crate::ui;
+
+type Result<T> = std::result::Result<T, SyncError>;
+
+#[derive(Error, Debug)]
+enum SyncError {
+    #[error("File system processing failed")]
+    FsProcessingError,
+    #[error("Command execution failed")]
+    CommandError,
+    #[error("{error_type:?} is not supported in your environment")]
+    Unsupported { error_type: String },
+    #[error("You should run with administrator rights")]
+    NoAdministrator,
+    #[error("{path0:?} and {path1:?} not found")]
+    NotFound { path0: String, path1: String },
+}
 
 #[derive(Debug)]
 pub struct Dotfile {
@@ -32,7 +50,6 @@ impl Dotfile {
     ) -> Self {
         let path = PathBuf::from(path);
         let target = PathBuf::from(target);
-        let enable = enable & path.exists() & target.exists();
         Self {
             name,
             path,
@@ -42,39 +59,52 @@ impl Dotfile {
         }
     }
 
-    pub fn sync(&self) -> Result<(), Error> {
+    pub fn sync(&self) {
         ui::title(self.name.clone());
         if self.enable {
-            self._sync()?;
+            if let Err(e) = self._sync() {
+                println!("{}", e)
+            }
+        } else {
+            self.print_message()
         }
-        Ok(())
     }
 
-    fn _sync(&self) -> Result<(), Error> {
+    fn _sync(&self) -> Result<()> {
         if self.target.exists() {
             if self.path.exists() {
                 // o -> o
                 let target = &self.target;
                 let new_target = PathBuf::from(self.target.display().to_string() + ".old_version");
 
-                fs::rename(&self.target, &new_target)?;
+                fs::rename(&self.target, &new_target).or(Err(SyncError::FsProcessingError))?;
                 match self.new_item() {
-                    Ok(_) => fs_extra::remove_items(&[&new_target]).unwrap(),
-                    Err(_) => fs::rename(new_target, target)?,
-                }
+                    Ok(_) => {
+                        fs_extra::remove_items(&[&new_target]).or(Err(SyncError::FsProcessingError))
+                    }
+                    Err(e) => {
+                        fs::rename(new_target, target).or(Err(SyncError::FsProcessingError))?;
+                        Err(e)
+                    }
+                }?;
             } else {
                 // x -> o
                 let parent_dir = self.path.parent().unwrap();
                 if !parent_dir.exists() {
-                    fs::create_dir_all(parent_dir)?;
+                    fs::create_dir_all(parent_dir).or(Err(SyncError::FsProcessingError))?;
                 }
-                fs::rename(&self.target, &self.path)?;
+                fs::rename(&self.target, &self.path).or(Err(SyncError::FsProcessingError))?;
                 self.new_item()?;
-            }
+            };
         } else if self.path.exists() {
             // o -> x
             self.new_item()?;
-        }
+        } else {
+            return Err(SyncError::NotFound {
+                path0: self.path.display().to_string(),
+                path1: self.target.display().to_string(),
+            });
+        };
 
         Ok(())
     }
@@ -93,17 +123,17 @@ impl Dotfile {
         println!();
     }
 
-    fn new_item(&self) -> Result<(), Error> {
+    fn new_item(&self) -> Result<()> {
         match self.sync_type.as_str() {
             "symlink" => {
                 self.create_symlink()?;
             }
             "hardlink" => {
-                fs::hard_link(&self.path, &self.target)?;
+                fs::hard_link(&self.path, &self.target).or(Err(SyncError::FsProcessingError))?;
             }
             "junction" => {
                 if cfg!(target_os = "windows") {
-                    let _ = Command::new("cmd")
+                    Command::new("cmd")
                         .arg("/C")
                         .args([
                             "mklink",
@@ -112,7 +142,12 @@ impl Dotfile {
                             self.path.to_str().unwrap(),
                         ])
                         .stdout(Stdio::null())
-                        .spawn();
+                        .spawn()
+                        .or(Err(SyncError::CommandError))?;
+                } else {
+                    return Err(SyncError::Unsupported {
+                        error_type: self.sync_type.clone(),
+                    });
                 }
             }
             "copy" => {
@@ -121,24 +156,32 @@ impl Dotfile {
                     &self.target,
                     &CopyOptions::new().copy_inside(true),
                 )
-                .unwrap();
+                .or(Err(SyncError::FsProcessingError))?;
             }
             _ => (),
         }
-        Ok(())
+        Ok(self.print_message())
     }
 
     #[cfg(not(target_os = "windows"))]
-    fn create_symlink(&self) -> Result<(), Error> {
-        unix::fs::symlink(&self.path, &self.target)
+    fn create_symlink(&self) -> Result<()> {
+        unix::fs::symlink(&self.path, &self.target)?;
+        Ok(())
     }
 
     #[cfg(target_os = "windows")]
-    fn create_symlink(&self) -> Result<(), Error> {
+    fn create_symlink(&self) -> Result<()> {
+        unsafe {
+            if IsUserAnAdmin() == 0 {
+                return Err(SyncError::NoAdministrator);
+            }
+        }
         if self.target.is_dir() {
             windows::fs::symlink_dir(&self.path, &self.target)
         } else {
             windows::fs::symlink_file(&self.path, &self.target)
         }
+        .or(Err(SyncError::FsProcessingError))?;
+        Ok(())
     }
 }
