@@ -1,11 +1,11 @@
-use std::io::Error;
+use anyhow::Result;
 
 mod config;
 mod dotfile;
 mod path;
 mod ui;
 
-fn main() -> Result<(), Error> {
+fn main() -> Result<()> {
     let config_file = path::config_file();
     let config_data = config::load_config(config_file)?;
 
@@ -22,8 +22,7 @@ fn main() -> Result<(), Error> {
     }
 
     for df in dotfiles {
-        df.sync()?;
-        df.print_message();
+        df.sync();
     }
 
     println!();

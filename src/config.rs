@@ -1,5 +1,6 @@
-use std::{env::consts, fs, io::Error, path::PathBuf};
+use std::{env::consts, fs, path::PathBuf};
 
+use anyhow::{Context, Result};
 use os_info;
 use serde::Deserialize;
 use toml::{value, Value};
@@ -18,7 +19,7 @@ pub struct Dotfile {
     pub enable: bool,
 }
 
-pub fn load_config(config_path: String) -> Result<Config, Error> {
+pub fn load_config(config_path: String) -> Result<Config> {
     #[derive(Deserialize)]
     struct UserConfig {
         default: DefaultVal,
@@ -32,8 +33,9 @@ pub fn load_config(config_path: String) -> Result<Config, Error> {
     }
 
     let user_config: UserConfig = {
-        let s = fs::read_to_string(PathBuf::from(config_path))?;
-        toml::from_str(&s).unwrap()
+        let s = fs::read_to_string(PathBuf::from(config_path.clone()))
+            .with_context(|| format!("failed to read {}", config_path))?;
+        toml::from_str(&s).context("failed to deserialize sinc.toml")?
     };
 
     let mut dotfiles = Vec::new();
