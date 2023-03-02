@@ -23,12 +23,12 @@ enum SyncError {
     FsProcessingError,
     #[error("Command execution failed")]
     CommandError,
-    #[error("{error_type:?} is not supported in your environment")]
+    #[error("{} is not supported in your environment", ui::item_type(error_type))]
     Unsupported { error_type: String },
     #[error("You should run with administrator rights")]
     NoAdministrator,
-    #[error("{path0:?} and {path1:?} not found")]
-    NotFound { path0: String, path1: String },
+    #[error("{} and {} not found", ui::path(path0.as_path()), ui::path(path0.as_path()))]
+    NotFound { path0: PathBuf, path1: PathBuf },
 }
 
 #[derive(Debug)]
@@ -60,7 +60,7 @@ impl Dotfile {
     }
 
     pub fn sync(&self) {
-        ui::title(self.name.clone());
+        print!("{}", ui::title(self.name.clone()));
         if self.enable {
             if let Err(e) = self._sync() {
                 println!("{}", e)
@@ -101,8 +101,8 @@ impl Dotfile {
             self.new_item()?;
         } else {
             return Err(SyncError::NotFound {
-                path0: self.path.display().to_string(),
-                path1: self.target.display().to_string(),
+                path0: self.path.clone(),
+                path1: self.target.clone(),
             });
         };
 
@@ -111,16 +111,17 @@ impl Dotfile {
 
     pub fn print_message(&self) {
         if self.enable {
-            ui::path(&self.path);
-            ui::symbol(" ====( ");
-            ui::item_type(self.sync_type.clone());
-            ui::symbol(" )===> ");
-            ui::path(&self.target);
+            println!(
+                "{}{}{}{}{}",
+                ui::path(&self.path),
+                ui::symbol(" ====( "),
+                ui::item_type(self.sync_type.clone()),
+                ui::symbol(" )===> "),
+                ui::path(&self.target),
+            )
         } else {
-            print!("disable: ");
-            ui::path(&self.path);
+            println!("disable: {}", ui::path(&self.path));
         }
-        println!();
     }
 
     fn new_item(&self) -> Result<()> {

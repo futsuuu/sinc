@@ -1,26 +1,26 @@
 use std::{fmt::Display, path::Path};
 
 use crossterm::{
-    style::{style, Stylize},
+    style::{style, StyledContent, Stylize},
     terminal,
 };
 
 use crate::path::omit_home;
 
-pub fn symbol(symbol: &str) {
-    print!("{}", symbol.cyan())
+pub fn symbol(symbol: &str) -> StyledContent<&str> {
+    symbol.cyan()
 }
 
-pub fn item_type<D>(item_type: D)
+pub fn item_type<D>(item_type: D) -> StyledContent<D>
 where
     D: Display,
 {
-    print!("{}", style(item_type).magenta().bold())
+    style(item_type).magenta().bold()
 }
 
-pub fn path(path: &Path) {
+pub fn path(path: &Path) -> String {
     let backquote = "`".green().dim();
-    print!(
+    format!(
         "{}{}{}",
         backquote,
         omit_home(path.display().to_string()).green(),
@@ -28,15 +28,15 @@ pub fn path(path: &Path) {
     )
 }
 
-pub fn title<D>(title: D)
+pub fn title<D>(title: D) -> String
 where
     D: Display,
 {
-    print!(
+    format!(
         "{}{}",
         format!("▂\n█  {}\n▔", title).cyan().bold(),
         "▔"
             .repeat((terminal::size().unwrap().0 - 1).into())
             .dark_grey()
-    );
+    )
 }
