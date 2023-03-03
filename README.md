@@ -84,37 +84,37 @@ sync_type."match(os)" = { default = "symlink", windows = "hardlink" }
 
 ### `config.default` : Table
 
-| Value | Type |
-| - | - |
-|`dir`|`String`|
-|`sync_type`|`SyncType`|
+| Value       | Type       |
+| ----------- | ---------- |
+| `dir`       | `String`   |
+| `sync_type` | `SyncType` |
 
 ### `config.dotfiles` : Array
 
-| Value | Type |
-| - | - |
-|`dir`|`Option<String>`|
-|`sync_type`|`Option<SyncType>`|
-|`target`|`String`|
-|`path`|`String`|
-|`enable`|`Option<Boolean>`|
+| Value       | Type               |
+| ----------- | ------------------ |
+| `dir`       | `Option<String>`   |
+| `sync_type` | `Option<SyncType>` |
+| `target`    | `String`           |
+| `path`      | `String`           |
+| `enable`    | `Option<Boolean>`  |
 
 ### `SyncType` : String
 
-| Value | Description |
-| - | - |
-|`"symlink"`|If you are using Windows, you need administrator rights|
-|`"junction"`|Windows only / used to link to folder|
-|`"hardlink"`|Behave like the original file / used to link to file|
-|`"copy"`|Just copy|
+| Value        | Description                                             |
+| ------------ | ------------------------------------------------------- |
+| `"symlink"`  | If you are using Windows, you need administrator rights |
+| `"junction"` | Windows only / used to link to folder                   |
+| `"hardlink"` | Behave like the original file / used to link to file    |
+| `"copy"`     | Just copy                                               |
 
 ### `config.dotfiles.Value.match(...)` : Table
 
-| Value | Key | Example |
-| - | - | - |
-|`match(os)`|<samp>[os_info::Type](https://docs.rs/os_info/latest/os_info/enum.Type.html)</samp> (lower case)|`arch linux`|
-|`match(os_type)`|<samp>[std::env::consts::OS](https://doc.rust-lang.org/std/env/consts/constant.OS.html)</samp>|`linux`|
-|`match(os_family)`|<samp>[std::env::consts::FAMILY](https://doc.rust-lang.org/std/env/consts/constant.FAMILY.html)</samp>|`unix`|
+| Value              | Key                                                                                                    | Example      |
+| ------------------ | ------------------------------------------------------------------------------------------------------ | ------------ |
+| `match(os)`        | <samp>[os_info::Type](https://docs.rs/os_info/latest/os_info/enum.Type.html)</samp> (lower case)       | `arch linux` |
+| `match(os_type)`   | <samp>[std::env::consts::OS](https://doc.rust-lang.org/std/env/consts/constant.OS.html)</samp>         | `linux`      |
+| `match(os_family)` | <samp>[std::env::consts::FAMILY](https://doc.rust-lang.org/std/env/consts/constant.FAMILY.html)</samp> | `unix`       |
 
 ## 📃 License
 
