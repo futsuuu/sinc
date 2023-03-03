@@ -166,7 +166,7 @@ impl Dotfile {
 
     #[cfg(not(target_os = "windows"))]
     fn create_symlink(&self) -> Result<()> {
-        unix::fs::symlink(&self.path, &self.target)?;
+        unix::fs::symlink(&self.path, &self.target).or(Err(SyncError::FsProcessingError))?;
         Ok(())
     }
 
