@@ -69,7 +69,7 @@ dir = "~/.dotfiles"
 sync_type."match(os)" = { default = "symlink", windows = "junction" }
 
 [[dotfiles]]
-path = "nvim"
+path = "bat"
   [dotfiles.target."match(os)"]
   default = "~/.config/bat"
   windows = "~/AppData/Roaming/bat"
