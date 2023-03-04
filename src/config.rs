@@ -86,15 +86,24 @@ fn get_val(parent_value: &Value, value_name: &str, default_value: Option<&Value>
         Value::Table(t) => {
             let mut t_iter = t.iter();
             let (item_name, item_val) = t_iter.next().unwrap();
-            match item_name.as_str() {
-                "match(os)" => new_arm(
-                    item_val,
-                    format!("{}", os_info::get().os_type())
-                        .to_lowercase()
-                        .as_str(),
-                ),
-                "match(os_type)" => new_arm(item_val, consts::OS),
-                "match(os_family)" => new_arm(item_val, consts::FAMILY),
+            let (func_name, func_val) = item_name // "match(os)"
+                .rsplit_once(")")
+                .unwrap_or_default() //             ("match(os", "")
+                .0 //                                "match(os"
+                .split_once("(")
+                .unwrap_or_default(); //            ("match", "os")
+            match func_name {
+                "match" => match func_val {
+                    "os_type" => new_arm(item_val, consts::OS),
+                    "os_family" => new_arm(item_val, consts::FAMILY),
+                    "os" => new_arm(
+                        item_val,
+                        format!("{}", os_info::get().os_type())
+                            .to_lowercase()
+                            .as_str(),
+                    ),
+                    _ => item_val.clone(),
+                },
                 _ => item_val.clone(),
             }
         }
