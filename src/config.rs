@@ -89,14 +89,14 @@ fn get_val(parent_value: &Value, value_name: &str, default_value: Option<&Value>
         Value::Table(t) => {
             let mut t_iter = t.iter();
             let (item_name, item_val) = t_iter.next().unwrap();
-            let (func_name, func_val) = item_name // "match(os)"
+            let (func_name, func_val) = item_name // "sys(os)"
                 .rsplit_once(")")
-                .unwrap_or_default() //             ("match(os", "")
-                .0 //                                "match(os"
+                .unwrap_or_default() //             ("sys(os", "")
+                .0 //                                "sys(os"
                 .split_once("(")
-                .unwrap_or_default(); //            ("match", "os")
+                .unwrap_or_default(); //            ("sys", "os")
             match func_name {
-                "match" => match func_val {
+                "sys" => match func_val {
                     "os_type" => new_arm(item_val, consts::OS),
                     "os_family" => new_arm(item_val, consts::FAMILY),
                     "os" => new_arm(
