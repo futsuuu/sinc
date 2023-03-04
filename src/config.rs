@@ -2,8 +2,11 @@ use std::{env::consts, fs, path::PathBuf};
 
 use anyhow::{Context, Result};
 use os_info;
+use pathsearch::find_executable_in_path;
 use serde::Deserialize;
 use toml::{value, Value};
+
+use crate::path;
 
 #[derive(Debug)]
 pub struct Config {
@@ -104,6 +107,19 @@ fn get_val(parent_value: &Value, value_name: &str, default_value: Option<&Value>
                     ),
                     _ => item_val.clone(),
                 },
+                "which" => {
+                    let mut correct_path_val = value::Table::new();
+                    for (key, val) in item_val.as_table().unwrap() {
+                        correct_path_val.insert(path::to_correct(key.clone()), val.clone());
+                    }
+                    new_arm(
+                        &Value::Table(correct_path_val),
+                        find_executable_in_path(func_val)
+                            .unwrap_or_default()
+                            .to_str()
+                            .unwrap_or_default(),
+                    )
+                }
                 _ => item_val.clone(),
             }
         }
