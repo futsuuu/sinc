@@ -1,7 +1,6 @@
-use std::{env::consts, fs, path::PathBuf};
+use std::{env::consts, fs};
 
 use anyhow::{Context, Result};
-use os_info;
 use pathsearch::find_executable_in_path;
 use serde::Deserialize;
 use toml::{value, Value};
@@ -36,7 +35,7 @@ pub fn load_config(config_path: String) -> Result<Config> {
     }
 
     let user_config: UserConfig = {
-        let s = fs::read_to_string(PathBuf::from(config_path.clone()))
+        let s = fs::read_to_string(&config_path)
             .with_context(|| format!("failed to read {}", config_path))?;
         toml::from_str(&s).context("failed to deserialize sinc.toml")?
     };
@@ -90,10 +89,10 @@ fn get_val(parent_value: &Value, value_name: &str, default_value: Option<&Value>
             let mut t_iter = t.iter();
             let (item_name, item_val) = t_iter.next().unwrap();
             let (func_name, func_val) = item_name // "sys(os)"
-                .rsplit_once(")")
+                .rsplit_once(')')
                 .unwrap_or_default() //             ("sys(os", "")
                 .0 //                                "sys(os"
-                .split_once("(")
+                .split_once('(')
                 .unwrap_or_default(); //            ("sys", "os")
             match func_name {
                 "sys" => match func_val {

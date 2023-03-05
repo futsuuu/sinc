@@ -161,7 +161,8 @@ impl Dotfile {
             }
             _ => (),
         }
-        Ok(self.print_message())
+        self.print_message();
+        Ok(())
     }
 
     #[cfg(not(target_os = "windows"))]
