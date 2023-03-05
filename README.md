@@ -76,8 +76,8 @@ path = "bat"
 
 | Key                          | Value type       |
 | ---------------------------- | ---------------- |
-| [default](#config.default)   | `Table`          |
-| [dotfiles](#config.dotfiles) | `Array of Table` |
+| [default](#configdefault)   | `Table`          |
+| [dotfiles](#configdotfiles) | `Array of Table` |
 
 ### `Config.default`
 
