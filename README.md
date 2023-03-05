@@ -60,7 +60,7 @@ In other words, the config files mentioned earlier have been moved to `~/.dotfil
 
 Now, this config does not support applications that have different location for their config file depending on the OS.
 
-To solve this, you can use [`sys(os)`](<#config.**.sys(...)>) instead of specifying the value directly.
+To solve this, you can use [`sys(os)`](#configsys) instead of specifying the value directly.
 
 ```toml
 [[dotfiles]]
@@ -74,8 +74,8 @@ path = "bat"
 
 ### `Config`
 
-| Key                          | Value type       |
-| ---------------------------- | ---------------- |
+| Key                         | Value type       |
+| --------------------------- | ---------------- |
 | [default](#configdefault)   | `Table`          |
 | [dotfiles](#configdotfiles) | `Array of Table` |
 
