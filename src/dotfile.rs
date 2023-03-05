@@ -27,7 +27,7 @@ enum SyncError {
     Unsupported { error_type: String },
     #[error("You should run with administrator rights")]
     NoAdministrator,
-    #[error("{} and {} not found", ui::path(path0.as_path()), ui::path(path0.as_path()))]
+    #[error("{} and {} not found", ui::path(path0.as_path()), ui::path(path1.as_path()))]
     NotFound { path0: PathBuf, path1: PathBuf },
 }
 
