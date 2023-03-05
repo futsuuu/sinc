@@ -10,17 +10,17 @@
 
 </div>
 
-## 🚧 WIP
+## WIP
 
 This repository is still development. Use at your own lisk.
 
-## 📦 Installation
+## Installation
 
 ```shell
 $ cargo install sinc
 ```
 
-## ⚡️ Getting started
+## Getting started
 
 ### Config file
 
@@ -58,48 +58,45 @@ In other words, the config files mentioned earlier have been moved to `~/.dotfil
 
 </div>
 
-Now, some of you may have noticed a problem here. \
-Yes, this config does not support applications that have different location for their config file depending on the OS.
+Now, this config does not support applications that have different location for their config file depending on the OS.
 
-To solve this, you can use `match(os)` instead of specifying the value directly.
+To solve this, you can use [`sys(os)`](<#config.**.sys(...)>) instead of specifying the value directly.
 
 ```toml
-[default]
-dir = "~/.dotfiles"
-sync_type."match(os)" = { default = "symlink", windows = "junction" }
-
 [[dotfiles]]
 path = "bat"
-  [dotfiles.target."match(os)"]
+  [dotfiles.target."sys(os)"]
   default = "~/.config/bat"
   windows = "~/AppData/Roaming/bat"
-
-[[dotfiles]]
-path = ".gitconfig"
-target = "~/.gitconfig"
-sync_type."match(os)" = { default = "symlink", windows = "hardlink" }
 ```
 
-## 🔧 Configration
+## Configration value
 
-### `config.default` : Table
+### `Config`
 
-| Value       | Type       |
-| ----------- | ---------- |
-| `dir`       | `String`   |
-| `sync_type` | `SyncType` |
+| Key                          | Value type       |
+| ---------------------------- | ---------------- |
+| [default](#config.default)   | `Table`          |
+| [dotfiles](#config.dotfiles) | `Array of Table` |
 
-### `config.dotfiles` : Array
+### `Config.default`
 
-| Value       | Type               |
-| ----------- | ------------------ |
-| `dir`       | `Option<String>`   |
-| `sync_type` | `Option<SyncType>` |
-| `target`    | `String`           |
-| `path`      | `String`           |
-| `enable`    | `Option<Boolean>`  |
+| Key       | Value type              |
+| --------- | ----------------------- |
+| dir       | `String`                |
+| sync_type | [`SyncType`](#synctype) |
 
-### `SyncType` : String
+### `Config.dotfiles`
+
+| Key       | Value type              | Default value              |
+| --------- | ----------------------- | -------------------------- |
+| dir       | `String`                | `Config.default.dir`       |
+| sync_type | [`SyncType`](#synctype) | `Config.default.sync_type` |
+| target    | `String`                |                            |
+| path      | `String`                |                            |
+| enable    | `Boolean`               | `true`                     |
+
+### `SyncType`
 
 | Value        | Description                                             |
 | ------------ | ------------------------------------------------------- |
@@ -108,14 +105,67 @@ sync_type."match(os)" = { default = "symlink", windows = "hardlink" }
 | `"hardlink"` | Behave like the original file / used to link to file    |
 | `"copy"`     | Just copy                                               |
 
-### `config.dotfiles.Value.match(...)` : Table
+### `Config.**.sys(...)`
 
-| Value              | Key                                                                                                    | Example      |
-| ------------------ | ------------------------------------------------------------------------------------------------------ | ------------ |
-| `match(os)`        | <samp>[os_info::Type](https://docs.rs/os_info/latest/os_info/enum.Type.html)</samp> (lower case)       | `arch linux` |
-| `match(os_type)`   | <samp>[std::env::consts::OS](https://doc.rust-lang.org/std/env/consts/constant.OS.html)</samp>         | `linux`      |
-| `match(os_family)` | <samp>[std::env::consts::FAMILY](https://doc.rust-lang.org/std/env/consts/constant.FAMILY.html)</samp> | `unix`       |
+| Name             | Key                                                                                                               | Key example  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------- | ------------ |
+| `sys(os)`        | <samp>[os_info::Type](https://github.com/stanislav-tkach/os_info#supported-operating-systems)</samp> (lower case) | `arch linux` |
+| `sys(os_type)`   | <samp>[std::env::consts::OS](https://doc.rust-lang.org/std/env/consts/constant.OS.html)</samp>                    | `linux`      |
+| `sys(os_family)` | <samp>[std::env::consts::FAMILY](https://doc.rust-lang.org/std/env/consts/constant.FAMILY.html)</samp>            | `unix`       |
 
-## 📃 License
+<details>
+<summary>example</summary>
+
+```toml
+[default]
+dir = "~/.dotfiles"
+sync_type."sys(os)" = { default = "symlink", windows = "junction" }
+
+[[dotfiles]]
+path = "bat"
+  [dotfiles.target."sys(os)"]
+  default = "~/.config/bat"
+  windows = "~/AppData/Roaming/bat"
+
+[[dotfiles]]
+path = ".gitconfig"
+target = "~/.gitconfig"
+  [dotfiles.sync_type."sys(os)"]
+  default = "symlink"
+  windows = "hardlink"
+```
+
+</details>
+
+### `Config.**.which(...)`
+
+| Name             | Key                                                                  |
+| ---------------- | -------------------------------------------------------------------- |
+| `which(COMMAND)` | path to `COMMAND` or `""` to be selected if `COMMAND` does not exist |
+
+<details>
+<summary>example</summary>
+
+```toml
+[[dotfiles]]
+path = "neofetch"
+target = "~/.config/neofetch"
+  [dotfiles.enable."which(neofetch)"]
+  # Enabled if the "neofetch" executable exists somewhere in $PATH.
+  default = true
+  "" = false
+
+[[dotfiles]]
+path = "hyprland"
+target = "~/.config/hypr"
+  [dotfiles.enable."which(wrappedhl)"]
+  # Enabled if the "wrappedhl" executable exists in "~/bin/wrappedhl" in $PATH.
+  default = false
+  "~/bin/wrappedhl" = true
+```
+
+</details>
+
+## License
 
 [MIT](./LICENSE)
