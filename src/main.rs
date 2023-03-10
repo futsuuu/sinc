@@ -18,6 +18,7 @@ fn main() -> Result<()> {
             path::to_correct(df.target),
             df.sync_type,
             df.enable,
+            df.hook_add,
         ));
     }
 

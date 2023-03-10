@@ -4,8 +4,9 @@ use std::os::unix;
 use std::os::windows;
 use std::{
     fs,
+    io::{self, Write},
     path::PathBuf,
-    process::{Command, Stdio},
+    process::{Command, Output, Stdio},
 };
 
 use fs_extra::{self, dir::CopyOptions};
@@ -38,6 +39,7 @@ pub struct Dotfile {
     target: PathBuf,
     sync_type: String,
     enable: bool,
+    hook_add: String,
 }
 
 impl Dotfile {
@@ -47,6 +49,7 @@ impl Dotfile {
         target: String,
         sync_type: String,
         enable: bool,
+        hook_add: String,
     ) -> Self {
         let path = PathBuf::from(path);
         let target = PathBuf::from(target);
@@ -56,6 +59,7 @@ impl Dotfile {
             target,
             sync_type,
             enable,
+            hook_add,
         }
     }
 
@@ -105,6 +109,12 @@ impl Dotfile {
                 path1: self.target.clone(),
             });
         };
+        if &self.hook_add != "" {
+            let output = run_command(&self.hook_add)?;
+            io::stdout().write_all(&output.stdout).unwrap();
+            io::stderr().write_all(&output.stderr).unwrap();
+            println!("{}", &output.status);
+        }
 
         Ok(())
     }
@@ -186,4 +196,18 @@ impl Dotfile {
         .or(Err(SyncError::FsProcessingError))?;
         Ok(())
     }
+}
+
+fn run_command(command: &str) -> Result<Output> {
+    let shell = if cfg!(target_os = "windows") {
+        ("cmd", "/C")
+    } else {
+        ("sh", "-c")
+    };
+    let output = Command::new(shell.0)
+        .arg(shell.1)
+        .arg(command)
+        .output()
+        .or(Err(SyncError::CommandError))?;
+    Ok(output)
 }
