@@ -74,10 +74,10 @@ path = "bat"
 
 ### `Config`
 
-| Key                         | Value type       |
-| --------------------------- | ---------------- |
-| [default](#configdefault)   | `Table`          |
-| [dotfiles](#configdotfiles) | `Array of Table` |
+| Key                         | Value type        |
+| --------------------------- | ----------------- |
+| [default](#configdefault)   | `Table`           |
+| [dotfiles](#configdotfiles) | `Array of Tables` |
 
 ### `Config.default`
 
@@ -95,6 +95,19 @@ path = "bat"
 | target    | `String`                |                            |
 | path      | `String`                |                            |
 | enable    | `Boolean`               | `true`                     |
+| hook_add  | `String`                | `""`                       |
+
+The value set in `hook_*` will be executed as a command at the specified timing.
+
+```mermaid
+flowchart LR
+Start([start]) ===> enable
+enable{enable} ===> |true| sync
+enable ---> |false| End
+sync[[sync]] ===> |success| hook_add
+hook_add[[hook_add]] ===> End
+sync ---> |fail| End([End])
+```
 
 ### `SyncType`
 
