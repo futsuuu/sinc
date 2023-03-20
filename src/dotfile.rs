@@ -200,17 +200,27 @@ impl Dotfile {
 }
 
 fn run_command(command: &str) -> Result<ExitStatus> {
-    let script_path = cache_file("hook_script").or(Err(SyncError::FsProcessingError))?;
+    let (command, script_name) = if cfg!(target_os = "windows") {
+        (format!("@echo off\n{}", command), "hook_script.bat")
+    } else {
+        (command.to_string(), "hook_script")
+    };
+    let script_path = cache_file(script_name).or(Err(SyncError::FsProcessingError))?;
     let mut file = fs::File::create(&script_path).or(Err(SyncError::FsProcessingError))?;
+
     file.write_all(command.as_bytes())
         .or(Err(SyncError::FsProcessingError))?;
-    let shell = if cfg!(target_os = "windows") {
-        "cmd"
-    } else {
-        "sh"
+
+    let (program, arg) = {
+        let script_path_str = script_path.to_str().unwrap();
+        if cfg!(target_os = "windows") {
+            (script_path_str, "")
+        } else {
+            ("sh", script_path_str)
+        }
     };
-    let exit_status = Command::new(shell)
-        .arg(&script_path.display().to_string())
+    let exit_status = Command::new(program)
+        .arg(arg)
         .spawn()
         .or(Err(SyncError::CommandError))?
         .wait()
