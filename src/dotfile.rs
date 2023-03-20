@@ -14,7 +14,7 @@ use thiserror::Error;
 #[cfg(target_os = "windows")]
 use windows_sys::Win32::UI::Shell::IsUserAnAdmin;
 
-use crate::ui;
+use crate::{path::cache_file, ui};
 
 type Result<T> = std::result::Result<T, SyncError>;
 
@@ -199,14 +199,17 @@ impl Dotfile {
 }
 
 fn run_command(command: &str) -> Result<Output> {
+    let script_path = cache_file("hook_script").or(Err(SyncError::FsProcessingError))?;
+    let mut file = fs::File::create(&script_path).or(Err(SyncError::FsProcessingError))?;
+    file.write_all(command.as_bytes())
+        .or(Err(SyncError::FsProcessingError))?;
     let shell = if cfg!(target_os = "windows") {
-        ("cmd", "/C")
+        "cmd"
     } else {
-        ("sh", "-c")
+        "sh"
     };
-    let output = Command::new(shell.0)
-        .arg(shell.1)
-        .arg(command)
+    let output = Command::new(shell)
+        .arg(&script_path.display().to_string())
         .output()
         .or(Err(SyncError::CommandError))?;
     Ok(output)

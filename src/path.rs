@@ -1,5 +1,6 @@
-use std::env;
+use std::{env, fs, path::PathBuf};
 
+use anyhow::Result;
 use dirs::home_dir;
 
 pub fn config_file() -> String {
@@ -11,6 +12,19 @@ pub fn config_file() -> String {
         },
     };
     to_correct(format!("{}/sinc/sinc.toml", config_dir))
+}
+
+pub fn cache_file(file_name: &str) -> Result<PathBuf> {
+    let cache_dir = match env::var("XDG_CACHE_HOME") {
+        Ok(p) => p,
+        Err(_) => "~/.cache".to_string(),
+    };
+    let r = PathBuf::from(to_correct(cache_dir + "/sinc/" + file_name));
+    let parent_dir = r.parent().unwrap();
+    if !parent_dir.exists() {
+        fs::create_dir_all(parent_dir)?;
+    }
+    Ok(r)
 }
 
 pub fn to_correct(path: String) -> String {
