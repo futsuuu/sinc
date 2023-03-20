@@ -109,7 +109,7 @@ impl Dotfile {
                 path1: self.target.clone(),
             });
         };
-        if &self.hook_add != "" {
+        if !&self.hook_add.is_empty() {
             let output = run_command(&self.hook_add)?;
             io::stdout().write_all(&output.stdout).unwrap();
             io::stderr().write_all(&output.stderr).unwrap();

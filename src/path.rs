@@ -14,11 +14,10 @@ pub fn config_file() -> String {
 }
 
 pub fn to_correct(path: String) -> String {
-    struct Separator<'a>(&'a str, &'a str);
     let sep = if cfg!(target_os = "windows") {
-        Separator("/", "\\")
+        ("/", "\\")
     } else {
-        Separator("\\", "/")
+        ("\\", "/")
     };
     if path.starts_with('~') {
         let mut p = home_dir().unwrap();
