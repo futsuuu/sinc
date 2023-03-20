@@ -4,9 +4,9 @@ use std::os::unix;
 use std::os::windows;
 use std::{
     fs,
-    io::{self, Write},
+    io::Write,
     path::PathBuf,
-    process::{Command, Output, Stdio},
+    process::{Command, ExitStatus, Stdio},
 };
 
 use fs_extra::{self, dir::CopyOptions};
@@ -110,10 +110,11 @@ impl Dotfile {
             });
         };
         if !&self.hook_add.is_empty() {
-            let output = run_command(&self.hook_add)?;
-            io::stdout().write_all(&output.stdout).unwrap();
-            io::stderr().write_all(&output.stderr).unwrap();
-            println!("{}", &output.status);
+            if let Some(code) = run_command(&self.hook_add)?.code() {
+                println!("Exit with status code {}.", code);
+            } else {
+                println!("Process terminated by signal.")
+            }
         }
 
         Ok(())
@@ -198,7 +199,7 @@ impl Dotfile {
     }
 }
 
-fn run_command(command: &str) -> Result<Output> {
+fn run_command(command: &str) -> Result<ExitStatus> {
     let script_path = cache_file("hook_script").or(Err(SyncError::FsProcessingError))?;
     let mut file = fs::File::create(&script_path).or(Err(SyncError::FsProcessingError))?;
     file.write_all(command.as_bytes())
@@ -208,9 +209,11 @@ fn run_command(command: &str) -> Result<Output> {
     } else {
         "sh"
     };
-    let output = Command::new(shell)
+    let exit_status = Command::new(shell)
         .arg(&script_path.display().to_string())
-        .output()
+        .spawn()
+        .or(Err(SyncError::CommandError))?
+        .wait()
         .or(Err(SyncError::CommandError))?;
-    Ok(output)
+    Ok(exit_status)
 }
