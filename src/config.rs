@@ -80,11 +80,7 @@ fn get_val(parent_value: &Value, value_name: &str, default_value: Option<&Value>
     };
 
     fn new_arm(item_val: &Value, key_name: &str) -> Value {
-        match item_val.get(key_name) {
-            Some(v) => v,
-            None => item_val.get("default").unwrap(),
-        }
-        .clone()
+        get_val(item_val, key_name, item_val.get("default"))
     }
 
     match raw_value {
