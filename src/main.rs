@@ -15,7 +15,10 @@ fn main() -> Result<()> {
         dotfiles.push(dotfile::Dotfile::new(
             df.path.clone(),
             path::to_correct(format!("{}/{}", df.dir, df.path)),
-            path::to_correct(df.target),
+            df.target
+                .iter()
+                .map(|t| path::to_correct(t.clone()))
+                .collect(),
             df.sync_type,
             df.enable,
             df.hook_add,

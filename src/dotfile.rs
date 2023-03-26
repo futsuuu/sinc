@@ -36,7 +36,7 @@ enum SyncError {
 pub struct Dotfile {
     name: String,
     path: PathBuf,
-    target: PathBuf,
+    target: Vec<PathBuf>,
     sync_type: String,
     enable: bool,
     hook_add: String,
@@ -46,13 +46,13 @@ impl Dotfile {
     pub fn new(
         name: String,
         path: String,
-        target: String,
+        target: Vec<String>,
         sync_type: String,
         enable: bool,
         hook_add: String,
     ) -> Self {
         let path = PathBuf::from(path);
-        let target = PathBuf::from(target);
+        let target = target.iter().map(PathBuf::from).collect();
         Self {
             name,
             path,
@@ -66,21 +66,23 @@ impl Dotfile {
     pub fn sync(&self) {
         print!("{}", ui::title(self.name.clone()));
         if self.enable {
-            if let Err(e) = sync(&self.path, &self.target, &self.sync_type) {
-                println!("{}", e)
-            } else {
-                print_message(&self.path, &self.target, &self.sync_type);
+            for target in &self.target {
+                if let Err(e) = sync(&self.path, target, &self.sync_type) {
+                    println!("{}", e)
+                } else {
+                    print_message(&self.path, target, &self.sync_type);
 
-                if !&self.hook_add.is_empty() {
-                    match run_command(&self.hook_add) {
-                        Ok(exit_status) => {
-                            if let Some(code) = exit_status.code() {
-                                println!("Exit with status code {}.", code);
-                            } else {
-                                println!("Process terminated by signal.");
+                    if !&self.hook_add.is_empty() {
+                        match run_command(&self.hook_add) {
+                            Ok(exit_status) => {
+                                if let Some(code) = exit_status.code() {
+                                    println!("Exit with status code {}.", code);
+                                } else {
+                                    println!("Process terminated by signal.");
+                                }
                             }
+                            Err(e) => println!("{}", e),
                         }
-                        Err(e) => println!("{}", e),
                     }
                 }
             }

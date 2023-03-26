@@ -16,7 +16,7 @@ pub struct Config {
 pub struct Dotfile {
     pub dir: String,
     pub path: String,
-    pub target: String,
+    pub target: Vec<String>,
     pub sync_type: String,
     pub enable: bool,
     pub hook_add: String,
@@ -46,23 +46,27 @@ pub fn load_config(config_path: String) -> Result<Config> {
         let dir = get_val(&df, "dir", Some(&user_config.default.dir));
         let sync_type = get_val(&df, "sync_type", Some(&user_config.default.sync_type));
         let path = get_val(&df, "path", None);
-        let target = get_val(&df, "target", None);
+        let target = match get_val(&df, "target", None) {
+            Value::Array(t) => t.iter().map(val2string).collect(),
+            Value::String(s) => vec![s],
+            _ => todo!(),
+        };
         let enable = get_val(&df, "enable", Some(&Value::Boolean(true)));
         let hook_add = get_val(&df, "hook_add", Some(&Value::from("")));
         dotfiles.push(Dotfile {
-            dir: val2string(dir),
-            path: val2string(path),
-            target: val2string(target),
-            sync_type: val2string(sync_type),
+            dir: val2string(&dir),
+            path: val2string(&path),
+            target,
+            sync_type: val2string(&sync_type),
             enable: enable.as_bool().unwrap(),
-            hook_add: val2string(hook_add),
+            hook_add: val2string(&hook_add),
         });
     }
 
     Ok(Config { dotfiles })
 }
 
-fn val2string(s: Value) -> String {
+fn val2string(s: &Value) -> String {
     s.to_string().trim_matches('"').to_string()
 }
 
