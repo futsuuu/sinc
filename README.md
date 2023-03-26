@@ -88,14 +88,14 @@ path = "bat"
 
 ### `Config.dotfiles`
 
-| Key       | Value type              | Default value              |
-| --------- | ----------------------- | -------------------------- |
-| dir       | `String`                | `Config.default.dir`       |
-| sync_type | [`SyncType`](#synctype) | `Config.default.sync_type` |
-| target    | `String`                |                            |
-| path      | `String`                |                            |
-| enable    | `Boolean`               | `true`                     |
-| hook_add  | `String`                | `""`                       |
+| Key       | Value type                  | Default value              |
+| --------- | --------------------------- | -------------------------- |
+| dir       | `String`                    | `Config.default.dir`       |
+| sync_type | [`SyncType`](#synctype)     | `Config.default.sync_type` |
+| target    | `String` or `Array<String>` |                            |
+| path      | `String`                    |                            |
+| enable    | `Boolean`                   | `true`                     |
+| hook_add  | `String`                    | `""`                       |
 
 The value set in `hook_*` will be executed as a command at the specified timing.
 
