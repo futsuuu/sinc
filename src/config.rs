@@ -1,11 +1,26 @@
 use std::{env::consts, fs};
 
-use anyhow::{Context, Result};
 use pathsearch::find_executable_in_path;
 use serde::Deserialize;
+use thiserror::Error;
 use toml::{value, Value};
 
 use crate::path;
+
+type Result<T> = std::result::Result<T, ConfigError>;
+
+#[derive(Error, Debug)]
+pub enum ConfigError {
+    #[error("failed to read {config_path}")]
+    ReadError { config_path: String },
+    #[error("failed to deserialize {config_path}")]
+    DeserializeError { config_path: String },
+    #[error("mismatch types: expected {expected}, found {found}")]
+    MismatchTypes {
+        expected: &'static str,
+        found: &'static str,
+    },
+}
 
 #[derive(Debug)]
 pub struct Config {
@@ -36,9 +51,10 @@ pub fn load_config(config_path: String) -> Result<Config> {
     }
 
     let user_config: UserConfig = {
-        let s = fs::read_to_string(&config_path)
-            .with_context(|| format!("failed to read {}", config_path))?;
-        toml::from_str(&s).context("failed to deserialize sinc.toml")?
+        let s = fs::read_to_string(&config_path).or(Err(ConfigError::ReadError {
+            config_path: config_path.clone(),
+        }))?;
+        toml::from_str(&s).or(Err(ConfigError::DeserializeError { config_path }))?
     };
 
     let mut dotfiles = Vec::new();
@@ -46,28 +62,37 @@ pub fn load_config(config_path: String) -> Result<Config> {
         let dir = get_val(&df, "dir", Some(&user_config.default.dir));
         let sync_type = get_val(&df, "sync_type", Some(&user_config.default.sync_type));
         let path = get_val(&df, "path", None);
-        let target = match get_val(&df, "target", None) {
-            Value::Array(t) => t.iter().map(val2string).collect(),
-            Value::String(s) => vec![s],
-            _ => todo!(),
-        };
+        let target = get_val(&df, "target", None);
         let enable = get_val(&df, "enable", Some(&Value::Boolean(true)));
         let hook_add = get_val(&df, "hook_add", Some(&Value::from("")));
         dotfiles.push(Dotfile {
-            dir: val2string(&dir),
-            path: val2string(&path),
-            target,
-            sync_type: val2string(&sync_type),
+            dir: val2string(&dir)?,
+            path: val2string(&path)?,
+            target: match target {
+                Value::Array(t) => t.iter().map(val2string).collect::<Result<Vec<String>>>(),
+                Value::String(s) => Ok(vec![s]),
+                _ => Err(ConfigError::MismatchTypes {
+                    expected: "string or array<string>",
+                    found: path.type_str(),
+                }),
+            }?,
+            sync_type: val2string(&sync_type)?,
             enable: enable.as_bool().unwrap(),
-            hook_add: val2string(&hook_add),
+            hook_add: val2string(&hook_add)?,
         });
     }
 
     Ok(Config { dotfiles })
 }
 
-fn val2string(s: &Value) -> String {
-    s.to_string().trim_matches('"').to_string()
+fn val2string(s: &Value) -> Result<String> {
+    match s.as_str() {
+        Some(s) => Ok(s.to_string()),
+        None => Err(ConfigError::MismatchTypes {
+            expected: "string",
+            found: s.type_str(),
+        }),
+    }
 }
 
 fn get_val(parent_value: &Value, value_name: &str, default_value: Option<&Value>) -> Value {
