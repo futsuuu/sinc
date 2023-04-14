@@ -22,8 +22,6 @@ $ cargo install sinc
 
 ## Getting started
 
-### Config file
-
 Sing looks for the config file in the following location:
 
 - `$SINC_CONFIG_DIR/sinc/sinc.toml`
@@ -47,16 +45,12 @@ target = "~/.config/sinc"
 If you run the `sinc` command in this state, a symbolic link is created from `~/.dotfiles/sinc` to `~/.config/sinc`. \
 In other words, the config files mentioned earlier have been moved to `~/.dotfiles/sinc` and a symbolic link has been created to the original location.
 
-<div align='center'>
-
-```haskell
-(dir + path)         (sync_type)            (target)
- │                    │                    │
- V                    V                    V
+```
+   (dir + path)         (sync_type)            (target)
+        │                    │                    │
+        V                    V                    V
 ~/.dotfiles/sinc  <<== symbolic link ==>>  ~/.config/sinc
 ```
-
-</div>
 
 Now, this config does not support applications that have different location for their config file depending on the OS.
 
@@ -95,13 +89,15 @@ path = "bat"
 | target    | `String` or `Array<String>` |                            |
 | path      | `String`                    |                            |
 | enable    | `Boolean`                   | `true`                     |
+| hook_read | `String`                    | `""`                       |
 | hook_add  | `String`                    | `""`                       |
 
 The value set in `hook_*` will be executed as a command at the specified timing.
 
 ```mermaid
 flowchart LR
-Start([start]) ===> enable
+Start([start]) ===> hook_read[[hook_read]]
+hook_read ===> enable
 enable{enable} ===> |true| sync
 enable ---> |false| End
 sync[[sync]] ===> |success| hook_add
