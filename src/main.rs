@@ -22,6 +22,7 @@ fn main() -> Result<()> {
             df.sync_type,
             df.enable,
             df.hook_add,
+            df.hook_read,
         ));
     }
 

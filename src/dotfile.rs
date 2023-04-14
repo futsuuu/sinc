@@ -40,6 +40,7 @@ pub struct Dotfile {
     sync_type: String,
     enable: bool,
     hook_add: String,
+    hook_read: String,
 }
 
 impl Dotfile {
@@ -50,6 +51,7 @@ impl Dotfile {
         sync_type: String,
         enable: bool,
         hook_add: String,
+        hook_read: String,
     ) -> Self {
         let path = PathBuf::from(path);
         let target = target.iter().map(PathBuf::from).collect();
@@ -60,11 +62,13 @@ impl Dotfile {
             sync_type,
             enable,
             hook_add,
+            hook_read,
         }
     }
 
     pub fn sync(&self) {
         print!("{}", ui::title(self.name.clone()));
+        run_command_with_message(&self.hook_read);
         if self.enable {
             for target in &self.target {
                 if let Err(e) = sync(&self.path, target, &self.sync_type) {
@@ -72,18 +76,7 @@ impl Dotfile {
                 } else {
                     print_message(&self.path, target, &self.sync_type);
 
-                    if !&self.hook_add.is_empty() {
-                        match run_command(&self.hook_add) {
-                            Ok(exit_status) => {
-                                if let Some(code) = exit_status.code() {
-                                    println!("Exit with status code {}.", code);
-                                } else {
-                                    println!("Process terminated by signal.");
-                                }
-                            }
-                            Err(e) => println!("{}", e),
-                        }
-                    }
+                    run_command_with_message(&self.hook_add);
                 }
             }
         } else {
@@ -227,4 +220,21 @@ fn run_command(command: &str) -> Result<ExitStatus> {
         .wait()
         .or(Err(SyncError::CommandError))?;
     Ok(exit_status)
+}
+
+fn run_command_with_message(command: &str) {
+    if command.trim().is_empty() {
+        return;
+    }
+    println!("Run hook command...");
+    match run_command(command) {
+        Ok(exit_status) => {
+            if let Some(code) = exit_status.code() {
+                println!("Exit with status code {}.", code);
+            } else {
+                println!("Process terminated by signal.");
+            }
+        }
+        Err(e) => println!("{}", e),
+    }
 }

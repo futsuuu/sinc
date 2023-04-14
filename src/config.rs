@@ -35,6 +35,7 @@ pub struct Dotfile {
     pub sync_type: String,
     pub enable: bool,
     pub hook_add: String,
+    pub hook_read: String,
 }
 
 pub fn load_config(config_path: String) -> Result<Config> {
@@ -65,6 +66,7 @@ pub fn load_config(config_path: String) -> Result<Config> {
         let target = get_val(&df, "target", None);
         let enable = get_val(&df, "enable", Some(&Value::Boolean(true)));
         let hook_add = get_val(&df, "hook_add", Some(&Value::from("")));
+        let hook_read = get_val(&df, "hook_read", Some(&Value::from("")));
         dotfiles.push(Dotfile {
             dir: val2string(&dir)?,
             path: val2string(&path)?,
@@ -79,6 +81,7 @@ pub fn load_config(config_path: String) -> Result<Config> {
             sync_type: val2string(&sync_type)?,
             enable: enable.as_bool().unwrap(),
             hook_add: val2string(&hook_add)?,
+            hook_read: val2string(&hook_read)?,
         });
     }
 
