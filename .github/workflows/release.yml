@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+env:
+  CARGO_TERM_COLOR: always
+  PACKAGE_NAME: sinc
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        target:
+          - x86_64-unknown-linux-musl
+          - x86_64-pc-windows-msvc
+          - x86_64-apple-darwin
+        include:
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Compile
+        if: matrix.target != 'x86_64-unknown-linux-musl'
+        run: cargo build --release --target ${{ matrix.target }}
+        
+      - name: Compile (linux)
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: docker run --rm -u root -v `pwd`:/home/rust/src ekidd/rust-musl-builder cargo build --release
+
+      - name: Convert to zip
+        if: matrix.target != 'x86_64-pc-windows-msvc'
+        run: |
+          sudo mv ./target/${{ matrix.target }}/release/${{ env.PACKAGE_NAME }} ./${{ env.PACKAGE_NAME }}
+          zip ./release.zip ./${{ env.PACKAGE_NAME }}
+
+      - name: Convert to zip (windows)
+        if: matrix.target == 'x86_64-pc-windows-msvc'
+        shell: powershell
+        run: |
+          Move-Item ./target/${{ matrix.target }}/release/${{ env.PACKAGE_NAME }}.exe ./${{ env.PACKAGE_NAME }}.exe
+          Compress-Archive -Path ./${{ env.PACKAGE_NAME }}.exe -DestinationPath ./release.zip
+
+      - name: Save a release
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-${{ matrix.target }}
+          path: ./release.zip
+
+  publish:
+    name: publish
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: release-x86_64-unknown-linux-musl
+          path: ${{ env.PACKAGE_NAME }}-x86_64-unknown-linux-musl
+      - uses: actions/download-artifact@v3
+        with:
+          name: release-x86_64-apple-darwin
+          path: ${{ env.PACKAGE_NAME }}-x86_64-apple-darwin
+      - uses: actions/download-artifact@v3
+        with:
+          name: release-x86_64-pc-windows-msvc
+          path: ${{ env.PACKAGE_NAME }}-x86_64-pc-windows-msvc
+
+      - run: ls -al
+
+      - name: Move files
+        run: |
+          for release_dir in * ;do
+          mv ${release_dir}/release.zip ./${release_dir}.zip
+          done
+
+      - run: ls -al
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: "*.zip"
+          name: ${{ env.TAG }}
+          token: ${{ secrets.GITHUB_TOKEN }}
